@@ -1,4 +1,4 @@
-package slackbot
+package bitbucketbot
 
 import (
 	"log"
@@ -17,6 +17,12 @@ type eventHandler func(payload interface{})
 
 type webHook struct {
 	eventTypes map[string]eventHandler
+}
+
+// Configuration used for slack api and bitbucket api
+type Configuration struct {
+	SlackAPIKey     string `json:"SlackAPIKey"`
+	BitBucketAPIKey string `json:"BitBucketAPIKey"`
 }
 
 var users = map[string]string{}

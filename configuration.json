@@ -1,0 +1,4 @@
+{ 
+    "SlackAPIKey": "YOUR_API_KEY", 
+    "BitBucketAPIKey":"YOUR_API_KEY"
+}
