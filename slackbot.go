@@ -49,9 +49,7 @@ func loadUsers(slack *slack.Client) (err error) {
 	}
 
 	for _, user := range slackUsers {
-		email, _ := users[user.ID]
-
-		users[user.ID] = email
+		users[user.ID] = user.Profile.Email
 	}
 
 	return nil
