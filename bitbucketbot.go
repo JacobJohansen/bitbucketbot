@@ -1,16 +1,13 @@
-package bitbucketbot
+package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/nlopes/slack"
-)
-
-const (
-	slackAPIKey     = "1"
-	bitbucketAPIKey = "1"
 )
 
 type eventHandler func(payload interface{})
@@ -25,12 +22,15 @@ type Configuration struct {
 	BitBucketAPIKey string `json:"BitBucketAPIKey"`
 }
 
+var config = Configuration{}
 var users = map[string]string{}
 
 func main() {
-	slackClient := slack.New(slackAPIKey)
+
+	slackClient := slack.New(config.SlackAPIKey)
 
 	var err = loadUsers(slackClient)
+
 	if err != nil {
 		log.Fatal("Failed to load slack users: " + err.Error())
 	}
@@ -47,6 +47,17 @@ func main() {
 // func handleNewPullRequest(payload payload.PullRequestCreatedPayload, slack slack.Client) {
 // 	users, err := slack.GetUsers()
 // }
+func loadConfiguration() {
+	file, e := ioutil.ReadFile("./configuration.json")
+	if e != nil {
+		log.Fatal("Could not read ./configuration.json: " + e.Error())
+	}
+
+	var config Configuration
+	if err := json.Unmarshal(file, &config); err != nil {
+		log.Fatal("Failed load configuration: " + err.Error())
+	}
+}
 
 func loadUsers(slack *slack.Client) (err error) {
 	slackUsers, err := slack.GetUsers()
@@ -55,8 +66,18 @@ func loadUsers(slack *slack.Client) (err error) {
 	}
 
 	for _, user := range slackUsers {
-		users[user.ID] = user.Profile.Email
+		users[user.Profile.Email] = user.ID
 	}
 
 	return nil
+}
+
+func sendUserMessage(email, message string, client *slack.Client) {
+	_, _, channelID, err := client.OpenIMChannel(users[email])
+	if err != nil {
+		log.Println("Couldn't find user to send message: " + email)
+		return
+	}
+
+	client.PostMessage(channelID, message, slack.PostMessageParameters{})
 }
